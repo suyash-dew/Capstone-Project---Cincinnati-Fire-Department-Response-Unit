@@ -1,0 +1,35 @@
+library(readxl)
+library(shiny)
+library(statsr)
+library(ggplot2)
+library(dplyr)
+library(ggmap)
+library(mapproj)
+library(pracma)
+
+#Importing dataset from .xlsx file renamed after downloading
+data <- read_xlsx("C:/Users/suyas/Documents/cin.xlsx")
+dim(data)
+
+#fetching map of Cincinati
+Cinmap <- get_map(location = 'Cincinnati', zoom = 14)
+ggmap(Cinmap)
+
+#Analyzing NAs in the data
+colSums(is.na(data))
+
+dat1 <- data[!is.na(data$LATITUDE_X) & !is.na(data$LONGITUDE_X),c(1,3:34)]
+Inci_count <- dat1 %>% group_by(CFD_INCIDENT_TYPE) %>% summarise(n =n())
+Inci_count <- Inci_count[1:5,]
+
+ggplot(Inci_count, aes(x = Inci_count$CFD_INCIDENT_TYPE, y = Inci_count$Counts)) + geom_bar( fill = "cyan", stat = "identity") + geom_text(aes(label = Counts),vjust = -0.3 ) +theme_classic() 
+
+
+ggmap(Cinmap) + geom_point(aes(x=dat1$LONGITUDE_X,y=dat1$LATITUDE_X), data = dat1, size = 1:nthroot(nrow(dat1),1000000))
+
+dat2 <- dat1 %>% filter(CFD_INCIDENT_TYPE_GROUP == c("ABDOMINAL PAIN/ PROBLEMS","DIABETIC PROBEMS", "EYE PROBLEMS / INJURIES","FIRE DRILL - NO RESPONSE", "HEADACHE", "HEROIN OVERDOSE", "HEADACHE","TEST") | is.na(CFD_INCIDENT_TYPE_GROUP))  %>% summarise(Counts = n())
+
+
+dat3 <- dat1 %>% filter(!is.na(ADDRESS_X)) %>% group_by(CFD_INCIDENT_TYPE) %>% summarise(Counts = n())
+
+dat5 %>% filter(is.na(ADDRESS_X) | is.na(LATITUDE_X) | is.na(LONGITUDE_X), is.na(ARRIVE) | !is.na(CLEAR)) %>% summarise(Counts = n())
